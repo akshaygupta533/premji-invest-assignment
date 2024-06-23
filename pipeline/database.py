@@ -1,12 +1,14 @@
+import os
 import sqlite3
 from datetime import datetime
-import sqlite3
-import os
+
 from logger import make_logger
 from pytz import timezone
+
 # Database file path
-db_file = 'database.db'
+db_file = "database.db"
 log = make_logger("pipeline")
+
 
 class DataBase:
     def __init__(self):
@@ -16,14 +18,16 @@ class DataBase:
             self.conn = sqlite3.connect(db_file)
             cursor = self.conn.cursor()
             # Create a table
-            cursor.execute('''
+            cursor.execute(
+                """
                 CREATE TABLE scores (
                     id INTEGER PRIMARY KEY,
                     timestamp TEXT NOT NULL,
                     url TEXT NOT NULL,
                     score REAL NOT NULL
                 )
-            ''')
+            """
+            )
             self.conn.commit()
             cursor.close()
             print(f"Database file '{db_file}' created successfully.")
@@ -32,13 +36,22 @@ class DataBase:
             print(f"Database file '{db_file}' already exists.")
 
     # Function to insert data into the database
-    def insert_data(self,data):
+    def insert_data(self, data):
         cursor = self.conn.cursor()
-        for row in data:            
-            cursor.execute('''
+        for row in data:
+            cursor.execute(
+                """
                 INSERT INTO scores (timestamp, url, score)
                 VALUES (?, ?, ?)
-            ''', (datetime.strftime(datetime.now(timezone("Asia/Kolkata")),"%Y-%m-%d %H:%M:%S"),row['url'], row['score']))
+            """,
+                (
+                    datetime.strftime(
+                        datetime.now(timezone("Asia/Kolkata")), "%Y-%m-%d %H:%M:%S"
+                    ),
+                    row["url"],
+                    row["score"],
+                ),
+            )
         self.conn.commit()
         cursor.close()
 
