@@ -3,7 +3,7 @@ import time
 from urllib.parse import quote
 
 import requests
-from logger import make_logger
+from src.logger import make_logger
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from selenium import webdriver

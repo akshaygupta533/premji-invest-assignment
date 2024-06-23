@@ -1,5 +1,20 @@
 version: '3.8'
 
+# ====================================== AIRFLOW ENVIRONMENT VARIABLES =======================================
+x-environment: &airflow_environment
+  - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+  - AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS=False
+  - AIRFLOW__CORE__LOAD_EXAMPLES=False
+  - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql://airflow:airflow@postgres:5432/airflow
+  - AIRFLOW__CORE__STORE_DAG_CODE=True
+  - AIRFLOW__CORE__STORE_SERIALIZED_DAGS=True
+  - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+  - AIRFLOW__WEBSERVER__RBAC=False
+  - AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Kolkata
+x-airflow-image: &airflow_image apache/airflow:2.5.1
+# ====================================== /AIRFLOW ENVIRONMENT VARIABLES ======================================
+
+
 services:
   mock-api:
     build:
@@ -14,16 +29,56 @@ services:
     image: selenium/standalone-firefox:latest
     ports:
       - "4444:4444"
+
+  postgres:
+    image: postgres:12-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    ports:
+      - "5432"
+
+  init:
+    image: *airflow_image
+    depends_on:
+      - postgres
+    environment: *airflow_environment
+    entrypoint: /bin/bash
+    command: -c 'airflow db upgrade && sleep 5 && airflow db init && airflow users create --username breno --password fate123 --firstname breno --lastname teixeira --role Admin --email brentchav@gmail.com'
   
-  
-  pipeline-manager:
-    build:
-      context: ./pipeline/
-      dockerfile: Dockerfile
-    network_mode: host
+
+  webserver:
+    image: *airflow_image
     restart: always
     depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    volumes:
+      - logs:/opt/airflow/logs
+    environment: *airflow_environment
+    command: webserver
+
+  scheduler:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: *airflow_image
+    restart: always
+    user: root
+    network_mode: host
+    depends_on:
+      - postgres
+      - webserver
       - mock-api
       - selenium-server
     volumes:
-      - ./pipeline:/app
+      - ./dags:/opt/airflow/dags
+      - logs:/opt/airflow/logs
+      - ./dags/dataset:/opt/airflow/dags/dataset
+    environment: *airflow_environment
+    command: scheduler
+volumes:
+  logs:

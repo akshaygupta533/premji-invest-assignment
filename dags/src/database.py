@@ -2,12 +2,10 @@ import os
 import sqlite3
 from datetime import datetime
 
-from logger import make_logger
 from pytz import timezone
 
 # Database file path
 db_file = "database.db"
-log = make_logger("pipeline")
 
 
 class DataBase:
