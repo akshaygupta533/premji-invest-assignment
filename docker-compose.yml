@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  mock-api:
+    build:
+      context: ./dummy_apis/
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - ./dummy_apis:/app
+
+  selenium-server:
+    image: selenium/standalone-firefox:latest
+    ports:
+      - "4444:4444"
+  
+  
+  pipeline-manager:
+    build:
+      context: ./pipeline/
+      dockerfile: Dockerfile
+    network_mode: host
+    restart: always
+    depends_on:
+      - mock-api
+      - selenium-server
+    volumes:
+      - ./pipeline:/app
