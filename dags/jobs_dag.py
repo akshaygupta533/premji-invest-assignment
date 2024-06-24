@@ -1,8 +1,14 @@
+import os
 from datetime import datetime, time, timedelta
 
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.dummy import DummyOperator
+# fmt: off
+from airflow.operators.python_operator import (BranchPythonOperator,
+                                               PythonOperator)
+# fmt: on
 from airflow.sensors.time_sensor import TimeSensor
+from pytz import timezone
 from src.analysis import DatasetAnalyzer
 from src.api import send_alert
 from src.database import DataBase
@@ -11,15 +17,21 @@ from src.scraper import WebScraper
 
 log = make_logger("pipeline")
 
+TICKER_LIST = os.environ["TICKER_LIST"]
+FIRST_PIPELINE_TIME = os.environ["FIRST_PIPELINE_TIME"]
+SECOND_PIPELINE_TIME = os.environ["SECOND_PIPELINE_TIME"]
+MOVIE_ID = int(os.environ["MOVIE_ID"])
+
 
 def pipeline_1():
     try:
         # Create the WebDriver instance
         scraper = WebScraper()
-        tickers = ["tata motors", "hdfc"]
+        tickers = TICKER_LIST.split("|")
         scores = []
         for ticker in tickers:
             log.info("Fetching top 5 links from both sources")
+            # Get article links from both sources for the ticker
             yourstory_links = scraper.get_yourstory_top_5(ticker)
             finshots_links = scraper.get_finshots_top_5(ticker)
             for link in yourstory_links:
@@ -45,7 +57,7 @@ def pipeline_1():
         db.close_conn()
     except Exception as e:
         log.error("Pipeline 1 failed")
-        send_alert("Pipeline 1 failed\nError: " + str(e))
+        send_alert("Pipeline 1 failed\nError: " + str(e))  # call the mock alert api
         raise e
 
 
@@ -66,8 +78,7 @@ def pipeline_2():
         )
         # Task 4
         log.info("Running task 4")
-        movie_id = 1
-        title, top_similar = analyzer.find_similar_movies(movie_id)
+        title, top_similar = analyzer.find_similar_movies(MOVIE_ID)
 
         log.info(f"Top {len(top_similar)} similar movies for movie {title}:")
         for i, (similar_movie, similarity_score, co_occurrence_count) in enumerate(
@@ -78,7 +89,7 @@ def pipeline_2():
             )
     except Exception as e:
         log.error("Pipeline 2 failed")
-        send_alert("Pipeline 2 failed\nError: " + str(e))
+        send_alert("Pipeline 2 failed\nError: " + str(e))  # call the mock alert api
         raise e
 
 
@@ -89,12 +100,12 @@ default_args = {
     "retries": 1,
     "retry_delay": timedelta(seconds=10),
 }
-
+hour, minute = FIRST_PIPELINE_TIME.split(":")
 dag = DAG(
     dag_id="daily_jobs",
     default_args=default_args,
-    description="A simple DAG to run two jobs sequentially",
-    schedule_interval="19 14 * * *",  # 7 PM daily
+    description="Pipelines DAG",
+    schedule_interval=f"{minute} {hour} * * *",  # Run schedule for the first pipeline
     is_paused_upon_creation=False,
 )
 
@@ -104,11 +115,36 @@ task1 = PythonOperator(
     dag=dag,
 )
 
-wait_until_8pm = TimeSensor(
-    task_id="wait_until_8pm",
-    target_time=time(14, 17),  # 8PM
-    poke_interval=60,  # Check every 60 seconds
+
+def branch_method(**context):
+    task1_end_time = datetime.now(timezone("Asia/Kolkata"))
+
+    # Define the cutoff time
+    hour, minute = SECOND_PIPELINE_TIME.split(":")
+    # Decide to skip pipeline 2 if pipeline 1 finishes after cutoff
+    if task1_end_time.time() < time(int(hour), int(minute)):
+        return "wait_until"
+    else:
+        return "skip_task2"
+
+
+branch_task = BranchPythonOperator(
+    task_id="check_task1_completion_time",
+    python_callable=branch_method,
+    provide_context=True,
+    dag=dag,
 )
+
+hour, minute = SECOND_PIPELINE_TIME.split(":")
+
+wait_until = TimeSensor(
+    task_id="wait_until",
+    target_time=time(int(hour), int(minute)),
+    poke_interval=60,  # Check every 60 seconds
+    dag=dag,
+)  # dag task which suspends following tasks until the target time
+
+skip_task2 = DummyOperator(task_id="skip_task2", dag=dag)
 
 task2 = PythonOperator(
     task_id="pipeline_2",
@@ -116,4 +152,7 @@ task2 = PythonOperator(
     dag=dag,
 )
 
-task1 >> wait_until_8pm >> task2  # Set task2 to run after task1
+# Set DAG dependencies
+task1 >> branch_task
+branch_task >> [wait_until, skip_task2]
+wait_until >> task2

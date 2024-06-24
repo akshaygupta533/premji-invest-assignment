@@ -5,7 +5,7 @@ from datetime import datetime
 from pytz import timezone
 
 # Database file path
-db_file = "dags/database.db"
+db_file = os.environ["DB_FILE"]
 
 
 class DataBase:
