@@ -2,8 +2,8 @@ import re
 import time
 from urllib.parse import quote
 
-import requests
 from src.logger import make_logger
+from src.api import get_senti_score
 import nltk
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -86,20 +86,16 @@ class WebScraper:
         )
         article_text = article_div.text
         cleaned_text = self.clean_text(article_text)
-        res = requests.post(
-            f"{DUMMY_API_URL}/get-senti-score/", json={"text": cleaned_text}
-        )
-        return res.json()["result"]
+        score = get_senti_score(cleaned_text)
+        return score
 
     def get_finshots_article_sentiment_score(self, url):
         self.driver.get(url)
         article_div = self.driver.find_element(By.XPATH, "//div[@class='post-content']")
         article_text = article_div.text
         cleaned_text = self.clean_text(article_text)
-        res = requests.post(
-            f"{DUMMY_API_URL}/get-senti-score/", json={"text": cleaned_text}
-        )
-        return res.json()["result"]
+        score = get_senti_score(cleaned_text)
+        return score
 
     def get_finshots_top_5(self, keyword):
         url = FINSHOTS_URL

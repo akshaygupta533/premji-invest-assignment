@@ -5,7 +5,7 @@ from datetime import datetime
 from pytz import timezone
 
 # Database file path
-db_file = "database.db"
+db_file = "dags/database.db"
 
 
 class DataBase:
@@ -21,6 +21,7 @@ class DataBase:
                 CREATE TABLE scores (
                     id INTEGER PRIMARY KEY,
                     timestamp TEXT NOT NULL,
+                    ticker TEXT NOT NULL,
                     url TEXT NOT NULL,
                     score REAL NOT NULL
                 )
@@ -39,15 +40,16 @@ class DataBase:
         for row in data:
             cursor.execute(
                 """
-                INSERT INTO scores (timestamp, url, score)
-                VALUES (?, ?, ?)
+                INSERT INTO scores (timestamp, ticker, url, score)
+                VALUES (?, ?, ?, ?)
             """,
                 (
                     datetime.strftime(
                         datetime.now(timezone("Asia/Kolkata")), "%Y-%m-%d %H:%M:%S"
                     ),
+                    row["ticker"],
                     row["url"],
-                    row["score"],
+                    row["score"]
                 ),
             )
         self.conn.commit()
