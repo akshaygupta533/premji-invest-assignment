@@ -1,7 +1,7 @@
 import pandas as pd
-import os
 from scipy.spatial.distance import cosine
 from src.logger import make_logger
+
 log = make_logger("pipeline")
 
 
@@ -116,38 +116,51 @@ class DatasetAnalyzer:
         )
 
         return top_genres
-    
-    def movie_similarity(self,movie1, movie2):
+
+    def movie_similarity(self, movie1, movie2):
         # Get ratings for the two movies
         ratings1 = self.ratings_matrix[movie1]
         ratings2 = self.ratings_matrix[movie2]
-        
+
         # Drop NaN values (users who haven't rated both movies)
         common_users = ratings1.dropna().index.intersection(ratings2.dropna().index)
-        
+
         # Calculate cosine similarity
-        if len(common_users) < 2:  # Adjust this threshold based on your co-occurrence requirement
+        if (
+            len(common_users) < 2
+        ):  # Adjust this threshold based on your co-occurrence requirement
             return 0, len(common_users)
-        
+
         sim = 1 - cosine(ratings1[common_users], ratings2[common_users])
-        
+
         return sim, len(common_users)
 
-    def find_similar_movies(self, movie_id, top_n=10, similarity_threshold=0.95, co_occurrence_threshold=50):
+    def find_similar_movies(
+        self, movie_id, top_n=10, similarity_threshold=0.95, co_occurrence_threshold=50
+    ):
         similarities = []
-    
-        # Get movie title based on movie_id
-        movie_title = self.items_df[self.items_df['movie_id'] == movie_id]['title'].values[0]
 
-        self.ratings_matrix = self.ratings_df.pivot_table(index='userid', columns='itemid', values='rating')
-        
+        # Get movie title based on movie_id
+        movie_title = self.items_df[self.items_df["movie_id"] == movie_id][
+            "title"
+        ].values[0]
+
+        self.ratings_matrix = self.ratings_df.pivot_table(
+            index="userid", columns="itemid", values="rating"
+        )
+
         for other_movie_id in self.ratings_matrix.columns:
             if other_movie_id != movie_id:
                 sim, co_occurrence = self.movie_similarity(movie_id, other_movie_id)
-                
-                if sim >= similarity_threshold and co_occurrence >= co_occurrence_threshold:
-                    other_movie_title = self.items_df[self.items_df['movie_id'] == other_movie_id]['title'].values[0]
+
+                if (
+                    sim >= similarity_threshold
+                    and co_occurrence >= co_occurrence_threshold
+                ):
+                    other_movie_title = self.items_df[
+                        self.items_df["movie_id"] == other_movie_id
+                    ]["title"].values[0]
                     similarities.append((other_movie_title, sim, co_occurrence))
-        
+
         similarities.sort(key=lambda x: x[1], reverse=True)
         return movie_title, similarities[:top_n]

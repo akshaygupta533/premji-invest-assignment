@@ -2,15 +2,16 @@ import re
 import time
 from urllib.parse import quote
 
-from src.logger import make_logger
-from src.api import get_senti_score
 import nltk
-nltk.download('stopwords')
-nltk.download('wordnet')
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+
+nltk.download("stopwords")
+nltk.download("wordnet")
+from nltk.corpus import stopwords  # noqa: E402
+from nltk.stem import WordNetLemmatizer  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.common.by import By  # noqa: E402
+from src.api import get_senti_score  # noqa: E402
+from src.logger import make_logger  # noqa: E402
 
 # SELENIUM_SERVER_URL = os.environ["SELENIUM_SERVER_URL"]
 SELENIUM_SERVER_URL = "http://host.docker.internal:4444/wd/hub"

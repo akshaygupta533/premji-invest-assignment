@@ -15,7 +15,8 @@ async def get_senti_score(input: TextInput):
     # Dummy processing
     return {"result": random.uniform(0, 1)}
 
+
 @app.post("/send-alert/")
 async def send_alert(input: TextInput):
     print(f"Got alert: {input.text}")
-    return {"message":"Alert received"}
+    return {"message": "Alert received"}

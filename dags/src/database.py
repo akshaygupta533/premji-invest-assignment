@@ -49,7 +49,7 @@ class DataBase:
                     ),
                     row["ticker"],
                     row["url"],
-                    row["score"]
+                    row["score"],
                 ),
             )
         self.conn.commit()

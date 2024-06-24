@@ -1,6 +1,7 @@
 import time
 
 import schedule
+
 from dags.src.analysis import DatasetAnalyzer
 from dags.src.database import DataBase
 from dags.src.logger import make_logger
@@ -65,8 +66,12 @@ def analyse_100k_dataset():
         title, top_similar = analyzer.find_similar_movies(movie_id)
 
         log.info(f"Top {len(top_similar)} similar movies for movie {title}:")
-        for i, (similar_movie, similarity_score, co_occurrence_count) in enumerate(top_similar, 1):
-            log.info(f"{i}. {similar_movie}\tscore: {similarity_score:.4f}\tstrength: {co_occurrence_count}")
+        for i, (similar_movie, similarity_score, co_occurrence_count) in enumerate(
+            top_similar, 1
+        ):
+            log.info(
+                f"{i}. {similar_movie}\tscore: {similarity_score:.4f}\tstrength: {co_occurrence_count}"
+            )
 
     else:
         log.info(
