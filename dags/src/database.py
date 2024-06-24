@@ -2,12 +2,10 @@ import os
 import sqlite3
 from datetime import datetime
 
-from logger import make_logger
 from pytz import timezone
 
 # Database file path
-db_file = "database.db"
-log = make_logger("pipeline")
+db_file = "dags/database.db"
 
 
 class DataBase:
@@ -23,6 +21,7 @@ class DataBase:
                 CREATE TABLE scores (
                     id INTEGER PRIMARY KEY,
                     timestamp TEXT NOT NULL,
+                    ticker TEXT NOT NULL,
                     url TEXT NOT NULL,
                     score REAL NOT NULL
                 )
@@ -41,13 +40,14 @@ class DataBase:
         for row in data:
             cursor.execute(
                 """
-                INSERT INTO scores (timestamp, url, score)
-                VALUES (?, ?, ?)
+                INSERT INTO scores (timestamp, ticker, url, score)
+                VALUES (?, ?, ?, ?)
             """,
                 (
                     datetime.strftime(
                         datetime.now(timezone("Asia/Kolkata")), "%Y-%m-%d %H:%M:%S"
                     ),
+                    row["ticker"],
                     row["url"],
                     row["score"],
                 ),

@@ -2,16 +2,20 @@ import re
 import time
 from urllib.parse import quote
 
-import requests
-from logger import make_logger
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+import nltk
+
+nltk.download("stopwords")
+nltk.download("wordnet")
+from nltk.corpus import stopwords  # noqa: E402
+from nltk.stem import WordNetLemmatizer  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.common.by import By  # noqa: E402
+from src.api import get_senti_score  # noqa: E402
+from src.logger import make_logger  # noqa: E402
 
 # SELENIUM_SERVER_URL = os.environ["SELENIUM_SERVER_URL"]
-SELENIUM_SERVER_URL = "http://localhost:4444/wd/hub"
-DUMMY_API_URL = "http://localhost:80"
+SELENIUM_SERVER_URL = "http://host.docker.internal:4444/wd/hub"
+DUMMY_API_URL = "http://host.docker.internal:80"
 YOURSTORY_SEARCH_URL = "https://yourstory.com/search?q=KEYWORD&page=1"
 FINSHOTS_URL = "https://finshots.in"
 
@@ -83,20 +87,16 @@ class WebScraper:
         )
         article_text = article_div.text
         cleaned_text = self.clean_text(article_text)
-        res = requests.post(
-            f"{DUMMY_API_URL}/get-senti-score/", json={"text": cleaned_text}
-        )
-        return res.json()["result"]
+        score = get_senti_score(cleaned_text)
+        return score
 
     def get_finshots_article_sentiment_score(self, url):
         self.driver.get(url)
         article_div = self.driver.find_element(By.XPATH, "//div[@class='post-content']")
         article_text = article_div.text
         cleaned_text = self.clean_text(article_text)
-        res = requests.post(
-            f"{DUMMY_API_URL}/get-senti-score/", json={"text": cleaned_text}
-        )
-        return res.json()["result"]
+        score = get_senti_score(cleaned_text)
+        return score
 
     def get_finshots_top_5(self, keyword):
         url = FINSHOTS_URL

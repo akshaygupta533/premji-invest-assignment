@@ -1,10 +1,11 @@
 import time
 
 import schedule
-from analysis import DatasetAnalyzer
-from database import DataBase
-from logger import make_logger
-from scraper import WebScraper
+
+from dags.src.analysis import DatasetAnalyzer
+from dags.src.database import DataBase
+from dags.src.logger import make_logger
+from dags.src.scraper import WebScraper
 
 log = make_logger("pipeline")
 # Global variable to track if first pipeline has completed successfully
@@ -60,6 +61,18 @@ def analyse_100k_dataset():
             analyzer.get_top_genres_occupation_and_age_group()
         )
         # Task 4
+        log.info("Running task 4")
+        movie_id = 1
+        title, top_similar = analyzer.find_similar_movies(movie_id)
+
+        log.info(f"Top {len(top_similar)} similar movies for movie {title}:")
+        for i, (similar_movie, similarity_score, co_occurrence_count) in enumerate(
+            top_similar, 1
+        ):
+            log.info(
+                f"{i}. {similar_movie}\tscore: {similarity_score:.4f}\tstrength: {co_occurrence_count}"
+            )
+
     else:
         log.info(
             "Skipping second pipeline because the first failed or did not complete."
@@ -67,8 +80,8 @@ def analyse_100k_dataset():
 
 
 # Schedule the first method to run at 7PM
-schedule.every().day.at("10:02").do(scrape_data_and_get_scores)  # pipeline 1
-schedule.every().day.at("10:04").do(analyse_100k_dataset)  # pipeline 2
+schedule.every().day.at("12:28").do(scrape_data_and_get_scores)  # pipeline 1
+schedule.every().day.at("12:30").do(analyse_100k_dataset)  # pipeline 2
 
 if __name__ == "__main__":
     # Main loop to run the scheduler
