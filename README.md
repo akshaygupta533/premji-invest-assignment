@@ -77,4 +77,6 @@ Here we see that the dag execution follows the branch of dummy task `skip_task2`
 ![alt text](media/p2_skip.png)
 
 That's all Folks!
+
+
 ![Cat](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
