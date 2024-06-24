@@ -1,14 +1,18 @@
+import os
+
 import pandas as pd
 from scipy.spatial.distance import cosine
 from src.logger import make_logger
 
 log = make_logger("pipeline")
 
+database_path = os.environ["DATASET_PATH"]
+
 
 class DatasetAnalyzer:
     def __init__(self) -> None:
         self.users_df = pd.read_csv(
-            "dags/dataset/u.user",
+            f"{database_path}/u.user",
             delimiter="|",
             header=None,
             names=["userid", "age", "gender", "occupation", "zipcode"],
@@ -40,14 +44,14 @@ class DatasetAnalyzer:
             "Western",
         ]
         self.items_df = pd.read_csv(
-            "dags/dataset/u.item",
+            f"{database_path}/u.item",
             header=None,
             delimiter="|",
             names=item_cols,
             encoding="latin-1",
         )
         self.ratings_df = pd.read_csv(
-            "dags/dataset/u.data",
+            f"{database_path}/u.data",
             header=None,
             delimiter="\t",
             names=["userid", "itemid", "rating", "timestamp"],

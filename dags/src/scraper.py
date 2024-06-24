@@ -1,9 +1,11 @@
+import os
 import re
 import time
 from urllib.parse import quote
 
 import nltk
 
+# Download ntlk extra resources
 nltk.download("stopwords")
 nltk.download("wordnet")
 from nltk.corpus import stopwords  # noqa: E402
@@ -14,10 +16,10 @@ from src.api import get_senti_score  # noqa: E402
 from src.logger import make_logger  # noqa: E402
 
 # SELENIUM_SERVER_URL = os.environ["SELENIUM_SERVER_URL"]
-SELENIUM_SERVER_URL = "http://host.docker.internal:4444/wd/hub"
-DUMMY_API_URL = "http://host.docker.internal:80"
-YOURSTORY_SEARCH_URL = "https://yourstory.com/search?q=KEYWORD&page=1"
-FINSHOTS_URL = "https://finshots.in"
+SELENIUM_SERVER_URL = os.environ["SELENIUM_SERVER_URL"]
+DUMMY_API_URL = os.environ["DUMMY_API_URL"]
+YOURSTORY_SEARCH_URL = os.environ["YOURSTORY_SEARCH_URL"]
+FINSHOTS_URL = os.environ["FINSHOTS_URL"]
 
 log = make_logger("pipeline")
 
@@ -31,6 +33,7 @@ class WebScraper:
         options = webdriver.FirefoxOptions()
 
         for _ in range(retries):
+            # Retry loop for connecting to selenium server
             try:
                 self.driver = webdriver.Remote(
                     command_executor=selenium_server_url, options=options
@@ -44,6 +47,7 @@ class WebScraper:
         self.driver.implicitly_wait(5)
 
     def reinit_driver(self):
+        # Method to create a new connection to selenium server
         self.driver.quit()
         selenium_server_url = SELENIUM_SERVER_URL
 

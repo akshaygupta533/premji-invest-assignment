@@ -11,6 +11,16 @@ x-environment: &airflow_environment
   - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
   - AIRFLOW__WEBSERVER__RBAC=False
   - AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Kolkata
+  - DATASET_PATH=${DATASET_PATH}
+  - DUMMY_API_URL=${DUMMY_API_URL}
+  - DB_FILE=${DB_FILE}
+  - SELENIUM_SERVER_URL=${SELENIUM_SERVER_URL}
+  - YOURSTORY_SEARCH_URL=${YOURSTORY_SEARCH_URL}
+  - FINSHOTS_URL=${FINSHOTS_URL}
+  - TICKER_LIST=${TICKER_LIST}
+  - FIRST_PIPELINE_TIME=${FIRST_PIPELINE_TIME}
+  - SECOND_PIPELINE_TIME=${SECOND_PIPELINE_TIME}
+  - MOVIE_ID=${MOVIE_ID}
 x-airflow-image: &airflow_image apache/airflow:2.5.1
 # ====================================== /AIRFLOW ENVIRONMENT VARIABLES ======================================
 
@@ -46,7 +56,7 @@ services:
       - postgres
     environment: *airflow_environment
     entrypoint: /bin/bash
-    command: -c 'airflow db upgrade && sleep 5 && airflow db init && airflow users create --username breno --password fate123 --firstname breno --lastname teixeira --role Admin --email brentchav@gmail.com'
+    command: -c 'airflow db upgrade && sleep 5 && airflow db init && airflow users create --username akshay --password premji123 --firstname akshay --lastname gupta --role Admin --email akshaygupta533@gmail.com'
   
 
   webserver:
