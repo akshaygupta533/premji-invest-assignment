@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
+from airflow.sensors.time_sensor import TimeSensor
 
 from src.analysis import DatasetAnalyzer
 from src.logger import make_logger
@@ -63,14 +64,14 @@ default_args = {
     'depends_on_past': False,
     'start_date': datetime(2024, 6, 22),
     'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(seconds=10),
 }
 
 dag = DAG(
     dag_id ='daily_jobs',
     default_args=default_args,
     description='A simple DAG to run two jobs sequentially',
-    schedule_interval='35 19 * * *',  # 7 PM daily
+    schedule_interval='25 13 * * *',  # 7 PM daily
     is_paused_upon_creation=False
 )
 
@@ -80,10 +81,16 @@ task1 = PythonOperator(
     dag=dag,
 )
 
+wait_until_8pm = TimeSensor(
+        task_id='wait_until_8pm',
+        target_time=time(13, 30),  # 8PM
+        poke_interval=60  # Check every 60 seconds
+    )
+
 task2 = PythonOperator(
     task_id='pipeline_2',
     python_callable=pipeline_2,
     dag=dag,
 )
 
-task1 >> task2  # Set task2 to run after task1
+task1 >> wait_until_8pm >> task2  # Set task2 to run after task1

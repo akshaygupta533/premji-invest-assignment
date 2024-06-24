@@ -4,14 +4,17 @@ from urllib.parse import quote
 
 import requests
 from src.logger import make_logger
+import nltk
+nltk.download('stopwords')
+nltk.download('wordnet')
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 # SELENIUM_SERVER_URL = os.environ["SELENIUM_SERVER_URL"]
-SELENIUM_SERVER_URL = "http://localhost:4444/wd/hub"
-DUMMY_API_URL = "http://localhost:80"
+SELENIUM_SERVER_URL = "http://host.docker.internal:4444/wd/hub"
+DUMMY_API_URL = "http://host.docker.internal:80"
 YOURSTORY_SEARCH_URL = "https://yourstory.com/search?q=KEYWORD&page=1"
 FINSHOTS_URL = "https://finshots.in"
 

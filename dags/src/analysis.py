@@ -1,10 +1,14 @@
 import pandas as pd
+import os
 from scipy.spatial.distance import cosine
+from src.logger import make_logger
+log = make_logger("pipeline")
+
 
 class DatasetAnalyzer:
     def __init__(self) -> None:
         self.users_df = pd.read_csv(
-            "dataset/u.user",
+            "dags/dataset/u.user",
             delimiter="|",
             header=None,
             names=["userid", "age", "gender", "occupation", "zipcode"],
@@ -36,14 +40,14 @@ class DatasetAnalyzer:
             "Western",
         ]
         self.items_df = pd.read_csv(
-            "dataset/u.item",
+            "dags/dataset/u.item",
             header=None,
             delimiter="|",
             names=item_cols,
             encoding="latin-1",
         )
         self.ratings_df = pd.read_csv(
-            "dataset/u.data",
+            "dags/dataset/u.data",
             header=None,
             delimiter="\t",
             names=["userid", "itemid", "rating", "timestamp"],

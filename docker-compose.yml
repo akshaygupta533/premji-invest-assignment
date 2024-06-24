@@ -38,7 +38,7 @@ services:
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
     ports:
-      - "5432"
+      - "5432:5432"
 
   init:
     image: *airflow_image
@@ -68,7 +68,6 @@ services:
     image: *airflow_image
     restart: always
     user: root
-    network_mode: host
     depends_on:
       - postgres
       - webserver
